@@ -1,0 +1,21 @@
+syntax = "proto3";
+package message;
+option go_package = "github.com/gnarloqgames/ga-actor-poc/message";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+message BuildRequest {
+    string TraceID = 1;
+    google.protobuf.Timestamp Timestamp = 2;
+
+    string Name = 3;
+    string Duration = 4;
+    google.protobuf.Struct Context = 5;
+}
+
+message BuildResponse {
+    string TraceID = 1;
+    google.protobuf.Timestamp Timestamp = 2;
+
+    string Response = 3;
+}
