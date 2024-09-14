@@ -74,7 +74,8 @@ func TestSend(t *testing.T) {
 	}
 
 	request := &message.BuildRequest{
-		Name: "test",
+		Name:     "test",
+		Duration: "10s",
 	}
 
 	err := manager.Send(context.Background(), address, request, 10*time.Second)

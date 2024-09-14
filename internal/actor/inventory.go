@@ -52,7 +52,7 @@ func NewCollection[T Storeable]() *Collection[T] {
 }
 
 type Queueable interface {
-	*BuildRequest
+	*message.BuildRequest
 }
 
 type Queue[T Queueable] struct {
@@ -92,6 +92,15 @@ func (q *Queue[T]) Unshift() T {
 	return val
 }
 
+func (q *Queue[T]) Push(item T) int {
+	q.mx.Lock()
+	defer q.mx.Unlock()
+
+	q.items = append(q.items, item)
+
+	return q.len()
+}
+
 type InventoryActor struct {
 	ID   uuid.UUID
 	Name string
@@ -101,7 +110,7 @@ type InventoryActor struct {
 	Buildings *Collection[Building]
 	Resources *Collection[Resource]
 
-	BuildQueue *Queue[*BuildRequest]
+	BuildQueue *Queue[*message.BuildRequest]
 }
 
 func NewInventoryActor(name string) *InventoryActor {
@@ -119,7 +128,7 @@ func NewInventoryActor(name string) *InventoryActor {
 		Buildings: NewCollection[Building](),
 		Resources: NewCollection[Resource](),
 
-		BuildQueue: NewQueue[*BuildRequest](),
+		BuildQueue: NewQueue[*message.BuildRequest](),
 	}
 
 	go func() {
@@ -128,6 +137,9 @@ func NewInventoryActor(name string) *InventoryActor {
 				continue
 			}
 
+			task := actor.BuildQueue.Unshift()
+
+			slog.Warn("task done", "name", task.Name)
 		}
 	}()
 
@@ -159,6 +171,14 @@ func (a *InventoryActor) Receive(ctx context.Context, msg proto.Message, res pro
 		"building_name", req.Name,
 	)
 
+	newLen := a.BuildQueue.Push(req)
+
+	slog.Info("added request to build queue",
+		"name", req.Name,
+		"duration", req.Duration,
+		"len", newLen,
+	)
+
 	return nil
 }
 
@@ -168,12 +188,6 @@ func (a *InventoryActor) Start(ctx context.Context) {
 
 func (a *InventoryActor) Destroy(ctx context.Context) {
 	slog.Info("stopping actor", "kind", "inventory", "id", a.ID.String())
-}
-
-type BuildRequest struct {
-	name      string
-	resources []Resource
-	dur       time.Duration
 }
 
 type BuildResponse struct {

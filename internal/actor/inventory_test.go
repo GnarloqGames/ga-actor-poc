@@ -4,13 +4,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gnarloqgames/ga-actor-poc/message"
 	"github.com/stretchr/testify/require"
 )
 
 func TestQueueUnshift(t *testing.T) {
 	tests := []struct {
 		label         string
-		queue         []*BuildRequest
+		queue         []*message.BuildRequest
 		expectedValue *BuildRequest
 		expectedQueue []*BuildRequest
 	}{
