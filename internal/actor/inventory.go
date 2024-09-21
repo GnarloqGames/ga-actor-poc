@@ -58,18 +58,21 @@ type Queueable interface {
 type Queue[T Queueable] struct {
 	mx *sync.Mutex
 
-	items []T
+	indices []uuid.UUID
+	items   map[uuid.UUID]T
 }
 
 func NewQueue[T Queueable]() *Queue[T] {
 	return &Queue[T]{
-		mx:    &sync.Mutex{},
-		items: make([]T, 0),
+		mx: &sync.Mutex{},
+
+		indices: make([]uuid.UUID, 0),
+		items:   make(map[uuid.UUID]T),
 	}
 }
 
 func (q *Queue[T]) len() int {
-	return len(q.items)
+	return len(q.indices)
 }
 
 func (q *Queue[T]) Unshift() T {
@@ -81,13 +84,16 @@ func (q *Queue[T]) Unshift() T {
 		return nil
 	}
 
-	val := q.items[0]
+	index := q.indices[0]
+	val := q.items[index]
 
 	if len == 1 {
-		q.items = make([]T, 0)
+		q.indices = make([]uuid.UUID, 0)
 	} else {
-		q.items = q.items[1:]
+		q.indices = q.indices[1:]
 	}
+
+	delete(q.items, index)
 
 	return val
 }
@@ -96,7 +102,9 @@ func (q *Queue[T]) Push(item T) int {
 	q.mx.Lock()
 	defer q.mx.Unlock()
 
-	q.items = append(q.items, item)
+	index := uuid.New()
+	q.indices = append(q.indices, index)
+	q.items[index] = item
 
 	return q.len()
 }

@@ -11,6 +11,8 @@ message BuildRequest {
     string Name = 3;
     string Duration = 4;
     google.protobuf.Struct Context = 5;
+
+    string status = 6;
 }
 
 message BuildResponse {

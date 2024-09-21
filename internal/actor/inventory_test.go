@@ -1,7 +1,6 @@
 package actor
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/gnarloqgames/ga-actor-poc/message"
@@ -12,52 +11,56 @@ func TestQueueUnshift(t *testing.T) {
 	tests := []struct {
 		label         string
 		queue         []*message.BuildRequest
-		expectedValue *BuildRequest
-		expectedQueue []*BuildRequest
+		expectedValue *message.BuildRequest
+		expectedQueue []*message.BuildRequest
 	}{
 		{
 			label:         "empty",
-			queue:         make([]*BuildRequest, 0),
+			queue:         make([]*message.BuildRequest, 0),
 			expectedValue: nil,
-			expectedQueue: make([]*BuildRequest, 0),
+			expectedQueue: make([]*message.BuildRequest, 0),
 		},
 		{
 			label: "one",
-			queue: []*BuildRequest{
-				{name: "test_1"},
+			queue: []*message.BuildRequest{
+				{Name: "test_1"},
 			},
-			expectedValue: &BuildRequest{name: "test_1"},
-			expectedQueue: make([]*BuildRequest, 0),
+			expectedValue: &message.BuildRequest{Name: "test_1"},
+			expectedQueue: make([]*message.BuildRequest, 0),
 		},
 		{
 			label: "more",
-			queue: []*BuildRequest{
-				{name: "test_1"},
-				{name: "test_2"},
+			queue: []*message.BuildRequest{
+				{Name: "test_1"},
+				{Name: "test_2"},
 			},
-			expectedValue: &BuildRequest{name: "test_1"},
-			expectedQueue: []*BuildRequest{
-				{name: "test_2"},
+			expectedValue: &message.BuildRequest{Name: "test_1"},
+			expectedQueue: []*message.BuildRequest{
+				{Name: "test_2"},
 			},
 		},
 	}
 
 	for _, tt := range tests {
-		tf := func(t *testing.T) {
-			queue := Queue[*BuildRequest]{
-				mx:    &sync.Mutex{},
-				items: tt.queue,
-			}
+		queue := NewQueue[*message.BuildRequest]()
+		for _, item := range tt.queue {
+			queue.Push(item) //nolint
+		}
 
+		tf := func(t *testing.T) {
 			val := queue.Unshift()
 
 			if tt.expectedValue == nil {
 				require.Nil(t, val)
 			} else {
-				require.Equal(t, tt.expectedValue.name, val.name)
+				require.Equal(t, tt.expectedValue.Name, val.Name)
 			}
 
-			require.ElementsMatch(t, tt.expectedQueue, queue.items)
+			actualItems := make([]*message.BuildRequest, 0)
+			for _, item := range queue.items {
+				actualItems = append(actualItems, item)
+			}
+			require.ElementsMatch(t, tt.expectedQueue, actualItems)
 		}
 
 		t.Run(tt.label, tf)
