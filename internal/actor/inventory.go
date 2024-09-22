@@ -120,7 +120,9 @@ type InventoryActor struct {
 	BuildQueue *Queue[*message.BuildRequest]
 }
 
-func NewInventoryActor(id uuid.UUID) *InventoryActor {
+func InventoryActorFactory(ctx context.Context) model.Actor {
+	id := ctx.Value(model.KeyID).(uuid.UUID)
+
 	actor := &InventoryActor{
 		ID: id,
 
@@ -147,8 +149,8 @@ func NewInventoryActor(id uuid.UUID) *InventoryActor {
 	return actor
 }
 
-func (a *InventoryActor) GetID() string {
-	return a.ID.String()
+func (a *InventoryActor) GetID() uuid.UUID {
+	return a.ID
 }
 
 func (a *InventoryActor) GetKind() string {

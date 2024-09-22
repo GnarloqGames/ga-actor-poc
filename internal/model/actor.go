@@ -9,6 +9,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+type ContextKey string
+
+const (
+	KeyID ContextKey = "id"
+)
+
 type Address struct {
 	Kind string
 	ID   uuid.UUID
@@ -24,7 +30,7 @@ func (a Address) Hash() uuid.UUID {
 }
 
 type Actor interface {
-	GetID() string
+	GetID() uuid.UUID
 	GetKind() string
 	Start(ctx context.Context)
 	Destroy(ctx context.Context)

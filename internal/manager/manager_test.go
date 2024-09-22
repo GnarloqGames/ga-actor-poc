@@ -19,7 +19,8 @@ func TestGetInventory(t *testing.T) {
 		ID:   uuid.New(),
 	}
 
-	existingInventory := actor.NewInventoryActor(uuid.New())
+	ctx := context.WithValue(context.Background(), model.KeyID, uuid.New())
+	existingInventory := actor.InventoryActorFactory(ctx)
 	test2ID := createdAddress.Hash()
 
 	tests := []struct {
@@ -29,15 +30,17 @@ func TestGetInventory(t *testing.T) {
 	}{
 		{
 			manager: &Manager{
-				actors: &ActorCollection{
-					mx: &sync.Mutex{},
-					actors: map[uuid.UUID]model.Actor{
-						existingInventory.ID: existingInventory,
+				actors: map[string]*ActorCollection{
+					"inventory": {
+						mx: &sync.Mutex{},
+						actors: map[uuid.UUID]model.Actor{
+							existingInventory.GetID(): existingInventory,
+						},
 					},
 				},
 			},
-			id:         existingInventory.ID,
-			expectedID: existingInventory.ID.String(),
+			id:         existingInventory.GetID(),
+			expectedID: existingInventory.GetID().String(),
 		},
 		{
 			manager:    NewManager(),
@@ -48,11 +51,17 @@ func TestGetInventory(t *testing.T) {
 
 	for _, tt := range tests {
 		tf := func(t *testing.T) {
+			if len(tt.manager.actors) == 0 {
+				err := tt.manager.NewKind("inventory", actor.InventoryActorFactory)
+				require.NoError(t, err)
+			}
 			address := model.Address{
 				Kind: "inventory",
 				ID:   tt.id,
 			}
-			inv := tt.manager.actors.Get(address).(*actor.InventoryActor)
+			actors, ok := tt.manager.actors[address.Kind]
+			require.True(t, ok)
+			inv := actors.Get(address).(*actor.InventoryActor)
 
 			require.Equal(t, tt.expectedID, inv.ID.String())
 		}
