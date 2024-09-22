@@ -11,14 +11,14 @@ import (
 
 type Address struct {
 	Kind string
-	Name string
+	ID   uuid.UUID
 }
 
 func (a Address) Hash() uuid.UUID {
 	return uuid.NewHash(
 		sha256.New(),
 		uuid.NameSpaceOID,
-		[]byte(fmt.Sprintf("%s:%s", a.Kind, a.Name)),
+		[]byte(fmt.Sprintf("%s:%s", a.Kind, a.ID.String())),
 		5,
 	)
 }
@@ -26,7 +26,6 @@ func (a Address) Hash() uuid.UUID {
 type Actor interface {
 	GetID() string
 	GetKind() string
-	GetName() string
 	Start(ctx context.Context)
 	Destroy(ctx context.Context)
 	Receive(ctx context.Context, msg proto.Message, res proto.Message) error

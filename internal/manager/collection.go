@@ -28,7 +28,7 @@ func (i *ActorCollection) Get(address model.Address) model.Actor {
 
 	inv, ok := i.actors[address.Hash()]
 	if !ok {
-		inv = actor.NewInventoryActor(address.Name)
+		inv = actor.NewInventoryActor(address.ID)
 	}
 
 	return inv

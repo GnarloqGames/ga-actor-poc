@@ -14,20 +14,18 @@ import (
 )
 
 func TestGetInventory(t *testing.T) {
-	name1 := "existing_actor"
 	createdAddress := model.Address{
 		Kind: "inventory",
-		Name: "created_actor",
+		ID:   uuid.New(),
 	}
 
-	existingInventory := actor.NewInventoryActor(name1)
+	existingInventory := actor.NewInventoryActor(uuid.New())
 	test2ID := createdAddress.Hash()
 
 	tests := []struct {
-		manager      *Manager
-		name         string
-		expectedID   string
-		expectedName string
+		manager    *Manager
+		id         uuid.UUID
+		expectedID string
 	}{
 		{
 			manager: &Manager{
@@ -38,15 +36,13 @@ func TestGetInventory(t *testing.T) {
 					},
 				},
 			},
-			name:         name1,
-			expectedID:   existingInventory.ID.String(),
-			expectedName: existingInventory.Name,
+			id:         existingInventory.ID,
+			expectedID: existingInventory.ID.String(),
 		},
 		{
-			manager:      NewManager(),
-			name:         createdAddress.Name,
-			expectedID:   test2ID.String(),
-			expectedName: createdAddress.Name,
+			manager:    NewManager(),
+			id:         test2ID,
+			expectedID: test2ID.String(),
 		},
 	}
 
@@ -54,15 +50,14 @@ func TestGetInventory(t *testing.T) {
 		tf := func(t *testing.T) {
 			address := model.Address{
 				Kind: "inventory",
-				Name: tt.name,
+				ID:   tt.id,
 			}
 			inv := tt.manager.actors.Get(address).(*actor.InventoryActor)
 
 			require.Equal(t, tt.expectedID, inv.ID.String())
-			require.Equal(t, tt.expectedName, inv.Name)
 		}
 
-		t.Run(tt.name, tf)
+		t.Run(tt.id.String(), tf)
 	}
 }
 
@@ -70,7 +65,7 @@ func TestSend(t *testing.T) {
 	manager := NewManager()
 	address := model.Address{
 		Kind: "inventory",
-		Name: "test",
+		ID:   uuid.New(),
 	}
 
 	request := &message.BuildRequest{

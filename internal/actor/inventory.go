@@ -110,8 +110,7 @@ func (q *Queue[T]) Push(item T) int {
 }
 
 type InventoryActor struct {
-	ID   uuid.UUID
-	Name string
+	ID uuid.UUID
 
 	timers map[uuid.UUID]time.Timer
 
@@ -121,15 +120,9 @@ type InventoryActor struct {
 	BuildQueue *Queue[*message.BuildRequest]
 }
 
-func NewInventoryActor(name string) *InventoryActor {
-	address := model.Address{
-		Kind: "inventory",
-		Name: name,
-	}
-
+func NewInventoryActor(id uuid.UUID) *InventoryActor {
 	actor := &InventoryActor{
-		ID:   address.Hash(),
-		Name: name,
+		ID: id,
 
 		timers: make(map[uuid.UUID]time.Timer),
 
@@ -162,10 +155,6 @@ func (a *InventoryActor) GetKind() string {
 	return "inventory"
 }
 
-func (a *InventoryActor) GetName() string {
-	return a.Name
-}
-
 func (a *InventoryActor) Receive(ctx context.Context, msg proto.Message, res proto.Message) error {
 	req, ok := msg.(*message.BuildRequest)
 	if !ok {
@@ -175,7 +164,6 @@ func (a *InventoryActor) Receive(ctx context.Context, msg proto.Message, res pro
 	slog.Info("actor received message",
 		"actor_kind", a.GetKind(),
 		"actor_id", a.GetID(),
-		"actor_name", a.GetName(),
 		"building_name", req.Name,
 	)
 
